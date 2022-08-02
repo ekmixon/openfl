@@ -26,8 +26,7 @@ def to_device(obj, device, non_blocking=False):
                 for v in obj]
 
     if isinstance(obj, tuple):
-        return tuple([to_device(v, device, non_blocking=non_blocking)
-                     for v in obj])
+        return tuple(to_device(v, device, non_blocking=non_blocking) for v in obj)
 
 
 @contextmanager
@@ -102,8 +101,7 @@ def save_binary(d, fpath):
 
 def makedirpath(fpath: str):
     """Make path."""
-    dpath = os.path.dirname(fpath)
-    if dpath:
+    if dpath := os.path.dirname(fpath):
         os.makedirs(dpath, exist_ok=True)
 
 

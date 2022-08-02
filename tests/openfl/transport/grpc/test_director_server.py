@@ -14,21 +14,18 @@ from openfl.transport import DirectorGRPCServer
 @pytest.fixture
 def insecure_director():
     """Initialize an insecure director mock."""
-    director = DirectorGRPCServer(director_cls=Director, tls=False)
-
-    return director
+    return DirectorGRPCServer(director_cls=Director, tls=False)
 
 
 @pytest.fixture
 def secure_director():
     """Initialize a secure director mock."""
-    director = DirectorGRPCServer(
+    return DirectorGRPCServer(
         director_cls=Director,
         root_certificate=Path('./cert/root_ca.crt').absolute(),
         private_key=Path('./cert/localhost.key').absolute(),
-        certificate=Path('./cert/localhost.crt').absolute()
+        certificate=Path('./cert/localhost.crt').absolute(),
     )
-    return director
 
 
 def test_fill_certs(insecure_director, secure_director):

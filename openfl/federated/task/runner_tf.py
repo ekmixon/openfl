@@ -116,9 +116,7 @@ class TensorFlowTaskRunner(TaskRunner):
             if use_tqdm:
                 gen = tqdm.tqdm(gen, desc='training epoch')
 
-            for (X, y) in gen:
-                losses.append(self.train_batch(X, y))
-
+            losses.extend(self.train_batch(X, y) for X, y in gen)
         # Output metric tensors (scalar)
         origin = col_name
         tags = ('trained',)
@@ -153,14 +151,11 @@ class TensorFlowTaskRunner(TaskRunner):
                 tensor_name, origin, round_num + 1, False, ('model',)
             ): nparray for tensor_name, nparray in local_model_dict.items()}
 
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
+        global_tensor_dict = output_metric_dict | global_tensorkey_model_dict
+        local_tensor_dict = (
+            local_tensorkey_model_dict | next_local_tensorkey_model_dict
+        )
+
 
         # Update the required tensors if they need to be pulled from
         # the aggregator
@@ -224,11 +219,7 @@ class TensorFlowTaskRunner(TaskRunner):
             score += s * weight
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
-        else:
-            suffix += '_agg'
+        suffix = 'validate' + ('_local' if kwargs['apply'] == 'local' else '_agg')
         tags = ('metric', suffix)
         output_tensor_dict = {
             TensorKey(
@@ -267,11 +258,7 @@ class TensorFlowTaskRunner(TaskRunner):
             dict: The weight dictionary {<tensor_name>: <value>}
 
         """
-        if with_opt_vars is True:
-            variables = self.fl_vars
-        else:
-            variables = self.tvars
-
+        variables = self.fl_vars if with_opt_vars is True else self.tvars
         # FIXME: do this in one call?
         return {var.name: val for var, val in zip(
             variables, self.sess.run(variables))}
@@ -329,11 +316,7 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             list : The weight names list
         """
-        if with_opt_vars is True:
-            variables = self.fl_vars
-        else:
-            variables = self.tvars
-
+        variables = self.fl_vars if with_opt_vars is True else self.tvars
         return [var.name for var in variables]
 
     def get_required_tensorkeys_for_function(self, func_name, **kwargs):
@@ -345,11 +328,10 @@ class TensorFlowTaskRunner(TaskRunner):
         Returns:
             list : [TensorKey]
         """
-        if func_name == 'validate':
-            local_model = 'apply=' + str(kwargs['apply'])
-            return self.required_tensorkeys_for_function[func_name][local_model]
-        else:
+        if func_name != 'validate':
             return self.required_tensorkeys_for_function[func_name]
+        local_model = 'apply=' + str(kwargs['apply'])
+        return self.required_tensorkeys_for_function[func_name][local_model]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """

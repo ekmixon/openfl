@@ -57,8 +57,8 @@ def compute_ap_cmc(index, good_index, junk_index):
     rows_good = rows_good.flatten()
 
     cmc[rows_good[0]:] = 1.0
+    d_recall = 1.0 / ngood
     for i in range(ngood):
-        d_recall = 1.0 / ngood
         precision = (i + 1) * 1.0 / (rows_good[i] + 1)
         ap = ap + d_recall * precision
 
@@ -125,9 +125,7 @@ def extract_feature(model, dataloader):
 def fliplr(img):
     """Flip horizontal."""
     inv_idx = torch.arange(img.size(3) - 1, -1, -1).long()  # N x C x H x W
-    img_flip = img.index_select(3, inv_idx)
-
-    return img_flip
+    return img.index_select(3, inv_idx)
 
 
 class RandomIdentitySampler(Sampler):
@@ -157,8 +155,7 @@ class RandomIdentitySampler(Sampler):
         for pid in self.pids:
             idxs = self.index_dic[pid]
             num = len(idxs)
-            if num < self.num_instances:
-                num = self.num_instances
+            num = max(num, self.num_instances)
             self.length += num - num % self.num_instances
 
     def __iter__(self):

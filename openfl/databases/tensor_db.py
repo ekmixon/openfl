@@ -99,9 +99,7 @@ class TensorDB:
                             & (self.tensor_db['report'] == report)
                             & (self.tensor_db['tags'] == tags)]
 
-        if len(df) == 0:
-            return None
-        return np.array(df['nparray'].iloc[0])
+        return None if len(df) == 0 else np.array(df['nparray'].iloc[0])
 
     def get_aggregated_tensor(self, tensor_key: TensorKey, collaborator_weight_dict: dict,
                               aggregation_function: AggregationFunction
@@ -125,7 +123,7 @@ class TensorDB:
             None if not all values are present
 
         """
-        if len(collaborator_weight_dict) != 0:
+        if collaborator_weight_dict:
             assert np.abs(1.0 - sum(collaborator_weight_dict.values())) < 0.01, (
                 f'Collaborator weights do not sum to 1.0: {collaborator_weight_dict}'
             )

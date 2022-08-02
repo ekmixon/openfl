@@ -18,7 +18,7 @@ def authorized_cols():
 @pytest.fixture
 def task_groups(authorized_cols):
     """Initialize task groups."""
-    task_groups = [
+    return [
         {
             'name': 'train_and_validate',
             'percentage': 1.0,
@@ -26,11 +26,10 @@ def task_groups(authorized_cols):
             'tasks': [
                 'aggregated_model_validation',
                 'train',
-                'locally_tuned_model_validation'
-            ]
+                'locally_tuned_model_validation',
+            ],
         }
     ]
-    return task_groups
 
 
 @pytest.fixture

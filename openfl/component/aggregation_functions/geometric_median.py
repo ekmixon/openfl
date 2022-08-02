@@ -11,7 +11,7 @@ from .weighted_average import weighted_average
 
 def _geometric_median_objective(median, tensors, weights):
     """Compute geometric median objective."""
-    return sum([w * _l2dist(median, x) for w, x in zip(weights, tensors)])
+    return sum(w * _l2dist(median, x) for w, x in zip(weights, tensors))
 
 
 def geometric_median(tensors, weights, maxiter=4, eps=1e-5, ftol=1e-6):

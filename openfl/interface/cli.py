@@ -115,7 +115,7 @@ class CLI(Group):
                     f'\n{style(name, fg="blue", bold=True):<30}'
                     f' {style(help_str, bold=True)}' + '\n')
                 formatter.write('─' * 80 + '\n')
-            if level == 1:
+            elif level == 1:
                 formatter.write(
                     f'  {style("*", fg="green")}'
                     f' {style(name, fg="cyan"):<21} {help_str}' + '\n')

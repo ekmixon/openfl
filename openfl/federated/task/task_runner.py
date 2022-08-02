@@ -49,7 +49,10 @@ class CoreTaskRunner:
                 for tensor_name, nparray in local_model_dict.items()}
 
             global_tensor_dict = global_tensorkey_model_dict
-            local_tensor_dict = {**local_tensorkey_model_dict, **next_local_tensorkey_model_dict}
+            local_tensor_dict = (
+                local_tensorkey_model_dict | next_local_tensorkey_model_dict
+            )
+
 
             # Update the required tensors if they need to be
             # pulled from the aggregator
@@ -71,14 +74,14 @@ class CoreTaskRunner:
             self.training_round_completed = True
 
         else:
-            suffix = 'validate' + validation_flag
+            suffix = f'validate{validation_flag}'
             tags = (suffix,)
         tags = ('metric', *tags)
         metric_dict = {
             TensorKey(metric, origin, round_num, True, tags):
                 np.array(value) for metric, value in metric_dict.items()
         }
-        global_tensor_dict = {**global_tensor_dict, **metric_dict}
+        global_tensor_dict |= metric_dict
 
         return global_tensor_dict, local_tensor_dict
 
@@ -100,7 +103,7 @@ class CoreTaskRunner:
             def collaborator_adapted_task(col_name, round_num, input_tensor_dict, **kwargs):
                 task_contract = self.task_provider.task_contract[task_name]
                 # Validation flag can be [False, '_local', '_agg']
-                validation_flag = True if task_contract['optimizer'] is None else False
+                validation_flag = task_contract['optimizer'] is None
                 task_settings = self.task_provider.task_settings[task_name]
 
                 device = kwargs.get('device', 'cpu')
@@ -109,10 +112,7 @@ class CoreTaskRunner:
                 task_kwargs = {}
                 if validation_flag:
                     loader = self.data_loader.get_valid_loader()
-                    if kwargs['apply'] == 'local':
-                        validation_flag = '_local'
-                    else:
-                        validation_flag = '_agg'
+                    validation_flag = '_local' if kwargs['apply'] == 'local' else '_agg'
                 else:
                     loader = self.data_loader.get_train_loader()
                     # If train task we also pass optimizer
@@ -155,17 +155,13 @@ class CoreTaskRunner:
 
         # Why is it here
         self.opt_treatment = 'RESET'
-        self.tensor_dict_split_fn_kwargs = {}
         self.required_tensorkeys_for_function = {}
 
         # Complete hell below
         self.training_round_completed = False
-        # overwrite attribute to account for one optimizer param (in every
-        # child model that does not overwrite get and set tensordict) that is
-        # not a numpy array
-        self.tensor_dict_split_fn_kwargs.update({
+        self.tensor_dict_split_fn_kwargs = {
             'holdout_tensor_names': ['__opt_state_needed']
-        })
+        }
 
     def set_task_provider(self, task_provider):
         """
@@ -198,10 +194,7 @@ class CoreTaskRunner:
         of the model with the purpose to make a list of parameters to be aggregated.
         """
         self.framework_adapter = framework_adapter
-        if self.opt_treatment == 'CONTINUE_GLOBAL':
-            aggregate_optimizer_parameters = True
-        else:
-            aggregate_optimizer_parameters = False
+        aggregate_optimizer_parameters = self.opt_treatment == 'CONTINUE_GLOBAL'
         self.initialize_tensorkeys_for_functions(with_opt_vars=aggregate_optimizer_parameters)
 
     def set_logger(self):

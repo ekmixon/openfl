@@ -140,11 +140,7 @@ class PyTorchCNN(PyTorchTaskRunner):
                 val_score += pred.eq(target).sum().cpu().numpy()
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
-        else:
-            suffix += '_agg'
+        suffix = 'validate' + ('_local' if kwargs['apply'] == 'local' else '_agg')
         tags = ('metric', suffix)
         # TODO figure out a better way to pass in metric for
         #  this pytorch validate function

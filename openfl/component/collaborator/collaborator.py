@@ -189,15 +189,9 @@ class Collaborator:
             task_name = task.name
             kwargs = {}
             if task.task_type == 'validate':
-                if task.apply_local:
-                    kwargs['apply'] = 'local'
-                else:
-                    kwargs['apply'] = 'global'
+                kwargs['apply'] = 'local' if task.apply_local else 'global'
         else:
-            if isinstance(task, str):
-                task_name = task
-            else:
-                task_name = task.name
+            task_name = task if isinstance(task, str) else task.name
             func_name = self.task_config[task_name]['function']
             kwargs = self.task_config[task_name]['kwargs']
 
@@ -212,11 +206,7 @@ class Collaborator:
         # so we need to update these keys to their "absolute values"
         required_tensorkeys = []
         for tname, origin, rnd_num, report, tags in required_tensorkeys_relative:
-            if origin == 'GLOBAL':
-                origin = self.aggregator_uuid
-            else:
-                origin = self.collaborator_name
-
+            origin = self.aggregator_uuid if origin == 'GLOBAL' else self.collaborator_name
             # rnd_num is the relative round. So if rnd_num is -1, get the
             # tensor from the previous round
             required_tensorkeys.append(

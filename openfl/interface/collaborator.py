@@ -167,7 +167,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
         archive_type = 'zip'
         archive_name = f'col_{common_name}_to_agg_cert_request'
-        archive_file_name = archive_name + '.' + archive_type
+        archive_file_name = f'{archive_name}.{archive_type}'
 
         # Collaborator certificate signing request
         tmp_dir = join(mkdtemp(), 'openfl', archive_name)
@@ -194,8 +194,7 @@ def generate_cert_request(collaborator_name, data_path, silent, skip_package):
 
 def find_certificate_name(file_name):
     """Parse the collaborator name."""
-    col_name = str(file_name).split('/')[-1].split('.')[0][4:]
-    return col_name
+    return str(file_name).split('/')[-1].split('.')[0][4:]
 
 
 def register_collaborator(file_name):
@@ -333,7 +332,11 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
              + ' = '
              + style(f'{csr_hash}', fg='red'))
 
-        if silent:
+        if (
+            not silent
+            and confirm('Do you want to sign this certificate?')
+            or silent
+        ):
 
             echo(' Signing COLLABORATOR certificate')
             signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
@@ -341,19 +344,10 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
             register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
 
         else:
-
-            if confirm('Do you want to sign this certificate?'):
-
-                echo(' Signing COLLABORATOR certificate')
-                signed_col_cert = sign_certificate(csr, signing_key, signing_crt.subject)
-                write_crt(signed_col_cert, f'{cert_name}.crt')
-                register_collaborator(CERT_DIR / 'client' / f'{file_name}.crt')
-
-            else:
-                echo(style('Not signing certificate.', fg='red')
-                     + ' Please check with this collaborator to get the'
-                       ' correct certificate for this federation.')
-                return
+            echo(style('Not signing certificate.', fg='red')
+                 + ' Please check with this collaborator to get the'
+                   ' correct certificate for this federation.')
+            return
 
         if len(common_name) == 0:
             # If the collaborator name is provided, the collaborator and
@@ -383,8 +377,7 @@ def certify(collaborator_name, silent, request_pkg=None, import_=False):
         previous_crts = glob(f'{CERT_DIR}/client/*.crt')
         unpack_archive(import_, extract_dir=CERT_DIR)
         updated_crts = glob(f'{CERT_DIR}/client/*.crt')
-        cert_difference = list(set(updated_crts) - set(previous_crts))
-        if len(cert_difference) != 0:
+        if cert_difference := list(set(updated_crts) - set(previous_crts)):
             crt = basename(cert_difference[0])
             echo(f'Certificate {crt} installed to PKI directory')
         else:

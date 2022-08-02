@@ -12,12 +12,11 @@ EXPERIMENT_MAME = 'test experiment'
 
 
 @pytest.fixture
-def experiment_object(federation_object):  # NOQA
+def experiment_object(federation_object):    # NOQA
     """Experiment object fixture."""
-    experiment_object = FLExperiment(
-        federation=federation_object,
-        experiment_name=EXPERIMENT_MAME)
-    return experiment_object
+    return FLExperiment(
+        federation=federation_object, experiment_name=EXPERIMENT_MAME
+    )
 
 
 def test_initialization(experiment_object):

@@ -61,10 +61,7 @@ class FedProxOptimizer(Optimizer):
             closure (callable, optional): A closure that reevaluates the model
                 and returns the loss.
         """
-        loss = None
-        if closure is not None:
-            loss = closure()
-
+        loss = closure() if closure is not None else None
         for group in self.param_groups:
             weight_decay = group['weight_decay']
             momentum = group['momentum']
@@ -85,10 +82,7 @@ class FedProxOptimizer(Optimizer):
                     else:
                         buf = param_state['momentum_buffer']
                         buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
-                    if nesterov:
-                        d_p = d_p.add(buf, alpha=momentum)
-                    else:
-                        d_p = buf
+                    d_p = d_p.add(buf, alpha=momentum) if nesterov else buf
                 if w_old is not None:
                     d_p.add_(p - w_old_p, alpha=mu)
                 p.add_(d_p, alpha=-group['lr'])
@@ -107,15 +101,15 @@ class FedProxAdam(Optimizer):
     def __init__(self, params, mu=0, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0, amsgrad=False):
         """Initialize."""
-        if not 0.0 <= lr:
+        if lr < 0.0:
             raise ValueError(f'Invalid learning rate: {lr}')
-        if not 0.0 <= eps:
+        if eps < 0.0:
             raise ValueError(f'Invalid epsilon value: {eps}')
         if not 0.0 <= betas[0] < 1.0:
             raise ValueError(f'Invalid beta parameter at index 0: {betas[0]}')
         if not 0.0 <= betas[1] < 1.0:
             raise ValueError(f'Invalid beta parameter at index 1: {betas[1]}')
-        if not 0.0 <= weight_decay:
+        if weight_decay < 0.0:
             raise ValueError(f'Invalid weight_decay value: {weight_decay}')
         if mu < 0.0:
             raise ValueError(f'Invalid mu value: {mu}')

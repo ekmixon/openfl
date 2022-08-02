@@ -124,8 +124,7 @@ def eval_embeddings_nn_maps(obj, embs64, embs32, masks, labels, nn=1):
     maps_32 = measure_emb_nn(emb_te, emb_tr, method='ngt', nn=nn)
     maps_32 = distribute_scores(maps_32, (256, 256), k=32, s=4)
 
-    maps_mult = maps_64 * maps_32
-    return maps_mult
+    return maps_64 * maps_32
 
 
 def measure_emb_nn(emb_te, emb_tr, method='kdt', nn=1):
@@ -134,6 +133,4 @@ def measure_emb_nn(emb_te, emb_tr, method='kdt', nn=1):
     train_emb_all = emb_tr.reshape(-1, d)
 
     l2_maps, _ = search_nn(emb_te, train_emb_all, method=method, nn=nn)
-    anomaly_maps = np.mean(l2_maps, axis=-1)
-
-    return anomaly_maps
+    return np.mean(l2_maps, axis=-1)

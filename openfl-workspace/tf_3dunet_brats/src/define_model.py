@@ -61,9 +61,7 @@ def dice_loss(target, prediction, axis=(1, 2, 3), smooth=0.0001):
     t = tf.reduce_sum(target, axis=axis)
     numerator = tf.reduce_mean(intersection + smooth)
     denominator = tf.reduce_mean(t + p + smooth)
-    dice_loss = -tf.math.log(2. * numerator) + tf.math.log(denominator)
-
-    return dice_loss
+    return -tf.math.log(2. * numerator) + tf.math.log(denominator)
 
 
 def build_model(input_shape,
@@ -153,6 +151,4 @@ def build_model(input_shape,
                                  kernel_size=(1, 1, 1),
                                  activation='sigmoid')(net)
 
-    model = tf.keras.models.Model(inputs=[inputs], outputs=[net])
-
-    return model
+    return tf.keras.models.Model(inputs=[inputs], outputs=[net])

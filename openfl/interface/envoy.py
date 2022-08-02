@@ -147,6 +147,4 @@ def shard_descriptor_from_config(shard_config: dict):
     params = shard_config.get('params', {})
 
     module = import_module(module_path)
-    instance = getattr(module, class_name)(**params)
-
-    return instance
+    return getattr(module, class_name)(**params)

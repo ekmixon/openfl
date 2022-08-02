@@ -48,11 +48,10 @@ class Director:
 
     def acknowledge_shard(self, shard_info: dict) -> bool:
         """Save shard info to shard registry if it's acceptable."""
-        is_accepted = False
         if (self.sample_shape != shard_info['sample_shape']
                 or self.target_shape != shard_info['target_shape']):
             logger.info('Request was not accepted')
-            return is_accepted
+            return False
         logger.info('Request was accepted')
         hc_period = self.settings.get('envoy_health_check_period', ENVOY_HEALTH_CHECK_PERIOD)
         self._shard_registry[shard_info['node_info']['name']] = {
@@ -62,8 +61,7 @@ class Director:
             'valid_duration': 2 * hc_period,
             'last_updated': time.time(),
         }
-        is_accepted = True
-        return is_accepted
+        return True
 
     async def set_new_experiment(
             self, *,
@@ -247,23 +245,19 @@ class Director:
         model_statuses = _get_model_download_statuses(exp)
         tasks = _get_experiment_tasks(exp)
         collaborators = _get_experiment_collaborators(exp)
-        result = {
+        return {
             'name': name,
             'status': exp.status,
             'current_round': exp.aggregator.round_number,
             'total_rounds': exp.aggregator.rounds_to_train,
             'download_statuses': {
                 'models': model_statuses,
-                'logs': [{
-                    'name': 'aggregator',
-                    'status': 'ready'
-                }],
+                'logs': [{'name': 'aggregator', 'status': 'ready'}],
             },
             'collaborators': collaborators,
             'tasks': tasks,
-            'progress': progress
+            'progress': progress,
         }
-        return result
 
     async def start_experiment_execution_loop(self):
         """Run task to monitor and run experiments."""
@@ -285,17 +279,17 @@ class Director:
 def _get_model_download_statuses(experiment) -> List[dict]:
     best_model_status = 'ready' if experiment.aggregator.best_tensor_dict else 'pending'
     last_model_status = 'ready' if experiment.aggregator.last_tensor_dict else 'pending'
-    model_statuses = [{
-        'name': 'best',
-        'status': best_model_status,
-    }, {
-        'name': 'last',
-        'status': last_model_status,
-    }, {
-        'name': 'init',
-        'status': 'ready'
-    }]
-    return model_statuses
+    return [
+        {
+            'name': 'best',
+            'status': best_model_status,
+        },
+        {
+            'name': 'last',
+            'status': last_model_status,
+        },
+        {'name': 'init', 'status': 'ready'},
+    ]
 
 
 def _get_experiment_progress(experiment) -> Union[float, None]:

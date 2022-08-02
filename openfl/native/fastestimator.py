@@ -80,22 +80,29 @@ class FederatedFastEstimator:
         }
         runners = {}
         save_dir = {}
-        data_path = 1
-        for col in plan.authorized_cols:
+        for data_path, col in enumerate(plan.authorized_cols, start=1):
             data = self.estimator.pipeline.data
             train_data, eval_data, test_data = split_data(
                 data['train'], data['eval'], data['test'],
                 data_path, len(plan.authorized_cols))
-            pipeline_kwargs = {}
-            for k, v in self.estimator.pipeline.__dict__.items():
-                if k in ['batch_size', 'ops', 'num_process',
-                         'drop_last', 'pad_value', 'collate_fn']:
-                    pipeline_kwargs[k] = v
-            pipeline_kwargs.update({
+            pipeline_kwargs = {
+                k: v
+                for k, v in self.estimator.pipeline.__dict__.items()
+                if k
+                in [
+                    'batch_size',
+                    'ops',
+                    'num_process',
+                    'drop_last',
+                    'pad_value',
+                    'collate_fn',
+                ]
+            } | {
                 'train_data': train_data,
                 'eval_data': eval_data,
-                'test_data': test_data
-            })
+                'test_data': test_data,
+            }
+
             pipeline = fe.Pipeline(**pipeline_kwargs)
 
             data_loader = FastEstimatorDataLoader(pipeline)
@@ -110,8 +117,6 @@ class FederatedFastEstimator:
                     save_dir_path = f'{trace.save_dir}/{col}'
                     os.makedirs(save_dir_path, exist_ok=True)
                     save_dir[col] = save_dir_path
-
-            data_path += 1
 
         # Create the collaborators
         collaborators = {collaborator: fx.create_collaborator(

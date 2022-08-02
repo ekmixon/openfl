@@ -36,14 +36,13 @@ def named_tensor():
 @pytest.fixture
 def tensor_key(named_tensor):
     """Initialize the tensor_key mock."""
-    tensor_key = TensorKey(
+    return TensorKey(
         named_tensor.name,
         'col1',
         named_tensor.round_number,
         named_tensor.report,
-        tuple(named_tensor.tags)
+        tuple(named_tensor.tags),
     )
-    return tensor_key
 
 
 def test_compress(tensor_key, named_tensor):

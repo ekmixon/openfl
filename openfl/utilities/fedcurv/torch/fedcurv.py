@@ -38,7 +38,7 @@ def get_buffer(module, target):
     buffer: torch.Tensor = getattr(mod, buffer_name)
 
     if buffer_name not in mod._buffers:
-        raise AttributeError('`' + buffer_name + '` is not a buffer')
+        raise AttributeError(f'`{buffer_name}` is not a buffer')
 
     return buffer
 

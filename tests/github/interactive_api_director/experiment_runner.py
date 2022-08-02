@@ -112,14 +112,14 @@ class Shard:
 
 def run_federation(shards: typing.Dict[str, Shard], director_path: str):
     logger.info('Starting the experiment!')
-    running_processes = []
     p = subprocess.Popen(
-        f"fx director start --disable-tls",
+        "fx director start --disable-tls",
         shell=True,
-        cwd=os.path.join(director_path)
+        cwd=os.path.join(director_path),
     )
+
     sleep(2)
-    running_processes.append(p)
+    running_processes = [p]
     for collaborator_path, shard in shards.items():
         p = subprocess.Popen(
             f'fx envoy start '

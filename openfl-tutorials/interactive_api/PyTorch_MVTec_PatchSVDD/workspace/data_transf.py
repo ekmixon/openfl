@@ -26,15 +26,12 @@ def bal_acc_score(obj, predictions, labels):
     f1_score = (2 * precision * recall) / (precision + recall)
     threshold = thresholds[np.argmax(f1_score)]
     prediction_result = predictions > threshold
-    ba_score = balanced_accuracy_score(labels, prediction_result)
-    return ba_score
+    return balanced_accuracy_score(labels, prediction_result)
 
 
 def detection_auroc(obj, anomaly_scores, labels):
     """Calculate detection auroc."""
-    # 1: anomaly 0: normal
-    auroc = roc_auc_score(labels, anomaly_scores)
-    return auroc
+    return roc_auc_score(labels, anomaly_scores)
 
 
 def segmentation_auroc(obj, anomaly_maps, masks):
@@ -44,5 +41,4 @@ def segmentation_auroc(obj, anomaly_maps, masks):
     gt[gt == 255] = 1  # 1: anomaly
 
     anomaly_maps = bilinears(anomaly_maps, (256, 256))
-    auroc = roc_auc_score(gt.flatten(), anomaly_maps.flatten())
-    return auroc
+    return roc_auc_score(gt.flatten(), anomaly_maps.flatten())

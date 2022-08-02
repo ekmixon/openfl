@@ -81,8 +81,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         if self.tls:
             return context.auth_context()['x509_common_name'][0].decode('utf-8')
         headers = get_headers(context)
-        client_id = headers.get('client_id', CLIENT_ID_DEFAULT)
-        return client_id
+        return headers.get('client_id', CLIENT_ID_DEFAULT)
 
     def start(self):
         """Launch the director GRPC server."""
@@ -115,7 +114,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
         await self.server.start()
         await self.server.wait_for_termination()
 
-    async def UpdateShardInfo(self, request, context):  # NOQA:N802
+    async def UpdateShardInfo(self, request, context):    # NOQA:N802
         """Receive acknowledge shard info."""
         logger.info(f'UpdateShardInfo request has got: {request.shard_info}')
         dict_shard_info = MessageToDict(
@@ -123,9 +122,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             preserving_proto_field_name=True
         )
         is_accepted = self.director.acknowledge_shard(dict_shard_info)
-        reply = director_pb2.UpdateShardInfoResponse(accepted=is_accepted)
-
-        return reply
+        return director_pb2.UpdateShardInfoResponse(accepted=is_accepted)
 
     async def SetNewExperiment(self, stream, context):  # NOQA:N802
         """Request to set new experiment."""
@@ -207,7 +204,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
 
             yield director_pb2.WaitExperimentResponse(experiment_name=experiment_name)
 
-    async def GetDatasetInfo(self, request, context):  # NOQA:N802
+    async def GetDatasetInfo(self, request, context):    # NOQA:N802
         """Request the info about target and sample shapes in the dataset."""
         logger.info('Request GetDatasetInfo has got!')
 
@@ -216,8 +213,7 @@ class DirectorGRPCServer(director_pb2_grpc.DirectorServicer):
             sample_shape=sample_shape,
             target_shape=target_shape
         )
-        resp = director_pb2.GetDatasetInfoResponse(shard_info=shard_info)
-        return resp
+        return director_pb2.GetDatasetInfoResponse(shard_info=shard_info)
 
     async def GetMetricStream(self, request, context):  # NOQA:N802
         """Request to stream metrics from the aggregator to frontend."""

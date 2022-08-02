@@ -125,9 +125,7 @@ def dice_coef_loss(y_true, y_pred, smooth=1.0, **kwargs):
     term1 = tf.reduce_mean(term1)
     term2 = tf.reduce_mean(term2)
 
-    loss = term1 + term2
-
-    return loss
+    return term1 + term2
 
 
 CHANNEL_LAST = True

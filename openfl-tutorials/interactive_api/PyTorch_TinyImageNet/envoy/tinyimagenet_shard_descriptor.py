@@ -52,8 +52,7 @@ class TinyImageNetDataset(ShardDataset):
 
     def read_image(self, path: Path) -> Image:
         """Read the image."""
-        img = Image.open(path)
-        return img
+        return Image.open(path)
 
     def fill_labels(self) -> None:
         """Fill labels."""
@@ -63,7 +62,7 @@ class TinyImageNetDataset(ShardDataset):
                     self.labels[f'{label_text}_{cnt}.JPEG'] = i
         elif self.data_type == 'val':
             with open(os.path.join(self._data_folder, 'val_annotations.txt'), 'r') as fp:
-                for line in fp.readlines():
+                for line in fp:
                     terms = line.split('\t')
                     file_name, label_text = terms[0], terms[1]
                     self.labels[file_name] = self.label_text_to_number[label_text]

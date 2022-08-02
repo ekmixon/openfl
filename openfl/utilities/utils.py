@@ -30,9 +30,7 @@ def getfqdn_env(name: str = '') -> str:
         The FQDN of the system.
     """
     fqdn = os.environ.get('FQDN', None)
-    if fqdn is not None:
-        return fqdn
-    return getfqdn(name)
+    return fqdn if fqdn is not None else getfqdn(name)
 
 
 def is_fqdn(hostname: str) -> bool:
@@ -130,7 +128,7 @@ def split_tensor_dict_by_types(tensor_dict, keep_types):
     keep_dict = {}
     holdout_dict = {}
     for k, v in tensor_dict.items():
-        if any([np.issubdtype(v.dtype, type_) for type_ in keep_types]):
+        if any(np.issubdtype(v.dtype, type_) for type_ in keep_types):
             keep_dict[k] = v
         else:
             holdout_dict[k] = v
@@ -196,11 +194,11 @@ def validate_file_hash(file_path, expected_hash, chunk_size=8192):
     with open(file_path, 'rb') as file:
         # Reading is buffered, so we can read smaller chunks.
         while True:
-            chunk = file.read(chunk_size)
-            if not chunk:
-                break
-            h.update(chunk)
+            if chunk := file.read(chunk_size):
+                h.update(chunk)
 
+            else:
+                break
     if h.hexdigest() != expected_hash:
         raise SystemError('ZIP File hash doesn\'t match expected file hash.')
 

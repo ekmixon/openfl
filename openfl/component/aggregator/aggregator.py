@@ -239,9 +239,7 @@ class Aggregator:
         Returns:
             is_time_to_quit: bool
         """
-        if self.round_number >= self.rounds_to_train:
-            return True
-        return False
+        return self.round_number >= self.rounds_to_train
 
     def get_tasks(self, collaborator_name):
         """
@@ -300,7 +298,7 @@ class Aggregator:
 
         # Do the check again because it's possible that all tasks have
         # been completed
-        if len(tasks) == 0:
+        if not tasks:
             tasks = None
             sleep_time = self._get_sleep_time()
 
@@ -336,11 +334,7 @@ class Aggregator:
         self.logger.debug(f'Retrieving aggregated tensor {tensor_name},{round_number},{tags} '
                           f'for collaborator {collaborator_name}')
 
-        if 'compressed' in tags or require_lossless:
-            compress_lossless = True
-        else:
-            compress_lossless = False
-
+        compress_lossless = bool('compressed' in tags or require_lossless)
         tags = list(tags)
 
         # TODO the TensorDB doesn't support compressed data yet.
@@ -368,17 +362,12 @@ class Aggregator:
         if nparray is None:
             raise ValueError(f'Aggregator does not have an aggregated tensor for {tensor_key}')
 
-        # quite a bit happens in here, including compression, delta handling,
-        # etc...
-        # we might want to cache these as well
-        named_tensor = self._nparray_to_named_tensor(
+        return self._nparray_to_named_tensor(
             agg_tensor_key,
             nparray,
             send_model_deltas=True,
-            compress_lossless=compress_lossless
+            compress_lossless=compress_lossless,
         )
-
-        return named_tensor
 
     def _nparray_to_named_tensor(self, tensor_key, nparray, send_model_deltas,
                                  compress_lossless):
@@ -413,12 +402,13 @@ class Aggregator:
                 delta_nparray,
                 lossless=compress_lossless
             )
-            named_tensor = utils.construct_named_tensor(
+            return utils.construct_named_tensor(
                 delta_comp_tensor_key,
                 delta_comp_nparray,
                 metadata,
-                lossless=compress_lossless
+                lossless=compress_lossless,
             )
+
 
         else:
             # Assume every other tensor requires lossless compression
@@ -427,14 +417,12 @@ class Aggregator:
                 nparray,
                 require_lossless=True
             )
-            named_tensor = utils.construct_named_tensor(
+            return utils.construct_named_tensor(
                 compressed_tensor_key,
                 compressed_nparray,
                 metadata,
-                lossless=compress_lossless
+                lossless=compress_lossless,
             )
-
-        return named_tensor
 
     def _collaborator_task_completed(self, collaborator, task_name, round_num):
         """
@@ -814,14 +802,14 @@ class Aggregator:
                 self.metric_queue.put(metric_dict)
                 # TODO Add all of the logic for saving the model based
                 #  on best accuracy, lowest loss, etc.
-                if 'validate_agg' in tags:
-                    # Compare the accuracy of the model, and
-                    # potentially save it
-                    if self.best_model_score is None or self.best_model_score < agg_results:
-                        self.logger.metric(f'Round {round_number}: saved the best '
-                                           f'model with score {agg_results:f}')
-                        self.best_model_score = agg_results
-                        self._save_model(round_number, self.best_state_path)
+                if 'validate_agg' in tags and (
+                    self.best_model_score is None
+                    or self.best_model_score < agg_results
+                ):
+                    self.logger.metric(f'Round {round_number}: saved the best '
+                                       f'model with score {agg_results:f}')
+                    self.best_model_score = agg_results
+                    self._save_model(round_number, self.best_state_path)
             if 'trained' in tags:
                 self._prepare_trained(tensor_name, origin, round_number, report, agg_results)
 
@@ -869,17 +857,16 @@ class Aggregator:
             task_name, self.round_number
         )
 
-        return all([
-            self._collaborator_task_completed(
-                c, task_name, self.round_number
-            ) for c in collaborators_needed
-        ])
+        return all(
+            self._collaborator_task_completed(c, task_name, self.round_number)
+            for c in collaborators_needed
+        )
 
     def _is_round_done(self):
         """Check that round is done."""
         tasks_for_round = self.assigner.get_all_tasks_for_round(self.round_number)
 
-        return all([self._is_task_done(task_name) for task_name in tasks_for_round])
+        return all(self._is_task_done(task_name) for task_name in tasks_for_round)
 
     def _log_big_warning(self):
         """Warn user about single collaborator cert mode."""

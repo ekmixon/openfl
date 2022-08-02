@@ -103,11 +103,9 @@ class NumPyAdam(Optimizer):
         Args:
             gradients: Partial derivatives with respect to optimized parameters.
         """
-        for grad_name in gradients:
+        for grad_name, grad in gradients.items():
             if grad_name not in self.grads_first_moment:
                 raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
-
-            grad = gradients[grad_name]
 
             self._update_first_moment(grad_name, grad)
             self._update_second_moment(grad_name, grad)

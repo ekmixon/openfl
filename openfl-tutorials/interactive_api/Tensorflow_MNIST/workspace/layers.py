@@ -12,8 +12,7 @@ def create_model():
     x1 = layers.Dense(64, activation='relu')(inputs)
     x2 = layers.Dense(64, activation='relu')(x1)
     outputs = layers.Dense(10, name='predictions')(x2)
-    model = keras.Model(inputs=inputs, outputs=outputs)
-    return model
+    return keras.Model(inputs=inputs, outputs=outputs)
 
 # Instantiate an optimizer.
 # Instantiate a loss function.

@@ -111,10 +111,13 @@ class DatasetGenerator:
         # Determine if axes are equal and can be rotated
         # If the axes aren't equal then we can't rotate them.
         equal_dim_axis = []
-        for idx in range(0, len(self.crop_dim)):
-            for jdx in range(idx + 1, len(self.crop_dim)):
-                if self.crop_dim[idx] == self.crop_dim[jdx]:
-                    equal_dim_axis.append([idx, jdx])  # Valid rotation axes
+        for idx in range(len(self.crop_dim)):
+            equal_dim_axis.extend(
+                [idx, jdx]
+                for jdx in range(idx + 1, len(self.crop_dim))
+                if self.crop_dim[idx] == self.crop_dim[jdx]
+            )
+
         dim_to_rotate = equal_dim_axis
 
         if np.random.rand() > 0.5:

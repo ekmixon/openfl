@@ -80,10 +80,9 @@ class NumPyAdagrad(Optimizer):
         Args:
             gradients: Partial derivatives with respect to optimized parameters.
         """
-        for grad_name in gradients:
+        for grad_name, grad in gradients.items():
             if grad_name not in self.grads_squared:
                 raise KeyError(f"Key {grad_name} doesn't exist in optimized parameters")
 
-            grad = gradients[grad_name]
             self.grads_squared[grad_name] = self.grads_squared[grad_name] + grad**2
             self._update_param(grad_name, grad)

@@ -83,11 +83,7 @@ class Envoy:
             data_file_path = self._save_data_stream_to_file(data_stream)
             self.is_experiment_running = True
             try:
-                with ExperimentWorkspace(
-                        self.name + '_' + experiment_name,
-                        data_file_path,
-                        is_install_requirements=True
-                ):
+                with ExperimentWorkspace(f'{self.name}_{experiment_name}', data_file_path, is_install_requirements=True):
                     self._run_collaborator()
             except Exception as exc:
                 logger.exception(f'Collaborator failed with error: {exc}:')

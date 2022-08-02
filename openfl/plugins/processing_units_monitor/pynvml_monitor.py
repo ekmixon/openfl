@@ -49,8 +49,7 @@ class PynvmlCUDADeviceMonitor(CUDADeviceMonitor):
     def get_device_name(self, index: int) -> str:
         """Get device utilization method."""
         handle = pynvml.nvmlDeviceGetHandleByIndex(index)
-        device_name = pynvml.nvmlDeviceGetName(handle)
-        return device_name
+        return pynvml.nvmlDeviceGetName(handle)
 
     def get_cuda_version(self) -> str:
         """

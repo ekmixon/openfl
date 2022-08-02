@@ -22,16 +22,15 @@ def director_client(director_pb2_grpc):
     director_port = 50051
     tls = False
     root_certificate, private_key, certificate = None, None, None
-    director_client = DirectorClient(
+    return DirectorClient(
         director_host=director_host,
         director_port=director_port,
         client_id=client_id,
         tls=tls,
         root_certificate=root_certificate,
         private_key=private_key,
-        certificate=certificate
+        certificate=certificate,
     )
-    return director_client
 
 
 def test_get_dataset_info(director_client):

@@ -44,18 +44,15 @@ def assigner():
 def agg(mocker, model, assigner):
     """Initialize the aggregator."""
     mocker.patch('openfl.protocols.utils.load_proto', return_value=model)
-    agg = aggregator.Aggregator(
+    return aggregator.Aggregator(
         'some_uuid',
         'federation_uuid',
         ['col1', 'col2'],
-
         'init_state_path',
         'best_state_path',
         'last_state_path',
-
         assigner,
     )
-    return agg
 
 
 @pytest.mark.parametrize(

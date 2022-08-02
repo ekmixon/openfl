@@ -93,8 +93,8 @@ class KmeansTransformer(Transformer):
         float_to_int_map = {}
         # create table
         for idx, u_value in enumerate(unique_value_array):
-            int_to_float_map.update({idx: u_value})
-            float_to_int_map.update({u_value: idx})
+            int_to_float_map[idx] = u_value
+            float_to_int_map[u_value] = idx
             # assign to the integer array
             indices = np.where(flatten_array == u_value)
             int_array[indices] = idx

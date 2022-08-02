@@ -12,18 +12,17 @@ ROUNDS_TO_TRAIN = 10
 @pytest.fixture
 def task_groups():
     """Initialize task groups."""
-    task_groups = [
+    return [
         {
             'name': 'train_and_validate',
             'percentage': 1.0,
             'tasks': [
                 'aggregated_model_validation',
                 'train',
-                'locally_tuned_model_validation'
-            ]
+                'locally_tuned_model_validation',
+            ],
         }
     ]
-    return task_groups
 
 
 @pytest.fixture

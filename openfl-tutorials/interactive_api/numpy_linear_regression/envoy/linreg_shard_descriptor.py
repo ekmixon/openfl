@@ -39,8 +39,6 @@ class LinRegSD(ShardDescriptor):
             return self.data[:self.n_samples // 2]
         elif dataset_type == 'val':
             return self.data[self.n_samples // 2:]
-        else:
-            pass
 
     @property
     def sample_shape(self) -> List[str]:

@@ -92,15 +92,15 @@ class KvasirDataset(Dataset):
 
 def load_kvasir_dataset():
     """Load and unzip kvasir dataset."""
-    zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e'
-                  '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7')
-    data_url = ('https://datasets.simula.no/downloads/'
-                'hyper-kvasir/hyper-kvasir-segmented-images.zip')
     filename = 'kvasir.zip'
     data_folder_path = Path.cwd().absolute() / 'data'
     kvasir_archive_path = data_folder_path / filename
     if not kvasir_archive_path.is_file():
+        data_url = ('https://datasets.simula.no/downloads/'
+                    'hyper-kvasir/hyper-kvasir-segmented-images.zip')
         download_url(data_url, data_folder_path, filename=filename)
+        zip_sha384 = ('e30d18a772c6520476e55b610a4db457237f151e'
+                      '19182849d54b49ae24699881c1e18e0961f77642be900450ef8b22e7')
         validate_file_hash(kvasir_archive_path, zip_sha384)
         with zipfile.ZipFile(kvasir_archive_path, 'r') as zip_ref:
             for member in tqdm(iterable=zip_ref.infolist(), desc='Unzipping dataset'):

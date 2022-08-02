@@ -44,14 +44,13 @@ def named_tensor():
 @pytest.fixture
 def tensor_key(collaborator_mock, named_tensor):
     """Initialize the tensor_key mock."""
-    tensor_key = TensorKey(
+    return TensorKey(
         named_tensor.name,
         collaborator_mock.collaborator_name,
         named_tensor.round_number,
         named_tensor.report,
-        tuple(named_tensor.tags)
+        tuple(named_tensor.tags),
     )
-    return tensor_key
 
 
 @pytest.fixture
@@ -59,14 +58,13 @@ def tensor_key_trained(collaborator_mock, named_tensor):
     """Initialize the tensor_key_trained mock."""
     named_tensor.tags.append('trained')
     named_tensor.tags.remove('model')
-    tensor_key = TensorKey(
+    return TensorKey(
         named_tensor.name,
         collaborator_mock.collaborator_name,
         named_tensor.round_number,
         named_tensor.report,
-        tuple(named_tensor.tags)
+        tuple(named_tensor.tags),
     )
-    return tensor_key
 
 
 def test_get_tasks(collaborator_mock):

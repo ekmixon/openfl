@@ -170,10 +170,7 @@ def get_workspace_parameter(name):
     if not doc:  # YAML is not correctly formatted
         doc = {}  # Create empty dictionary
 
-    if name not in doc.keys() or not doc[name]:  # List doesn't exist
-        return ''
-    else:
-        return doc[name]
+    return '' if name not in doc.keys() or not doc[name] else doc[name]
 
 
 def check_varenv(env: str = '', args: dict = None):
@@ -194,11 +191,9 @@ def get_fx_path(curr_path=''):
 
     match = re.search('lib', curr_path)
     idx = match.end()
-    path_prefix = curr_path[0:idx]
+    path_prefix = curr_path[:idx]
     bin_path = re.sub('lib', 'bin', path_prefix)
-    fx_path = os.path.join(bin_path, 'fx')
-
-    return fx_path
+    return os.path.join(bin_path, 'fx')
 
 
 def remove_line_from_file(pkg, filename):

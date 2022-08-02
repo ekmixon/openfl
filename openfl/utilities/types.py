@@ -18,8 +18,8 @@ class SingletonABCMeta(ABCMeta):
 
     _instances = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """Use the singleton instance if it has already been created."""
-        if cls not in cls._instances:
-            cls._instances[cls] = super(SingletonABCMeta, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+        if self not in self._instances:
+            self._instances[self] = super(SingletonABCMeta, self).__call__(*args, **kwargs)
+        return self._instances[self]

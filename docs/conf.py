@@ -1,5 +1,6 @@
 """Docs configuration module."""
 
+
 # Copyright (C) 2020-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -70,13 +71,18 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'tutorials/*', 'graveyard/*']
-# add temporary unused files
-exclude_patterns.extend(['modules.rst',
-                         'install.singularity.rst',
-                         'overview.what_is_intel_federated_learning.rst',
-                         'overview.how_can_intel_protect_federated_learning.rst',
-                         'source/workflow/running_the_federation.singularity.rst'])
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    'tutorials/*',
+    'graveyard/*',
+    'modules.rst',
+    'install.singularity.rst',
+    'overview.what_is_intel_federated_learning.rst',
+    'overview.how_can_intel_protect_federated_learning.rst',
+    'source/workflow/running_the_federation.singularity.rst',
+]
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -32,10 +32,7 @@ default_tasks = [
 
 def assigner_function(collaborators, round_number, **kwargs):
     """Return tasks by collaborator."""
-    tasks_by_collaborator = {}
-    for collaborator in collaborators:
-        tasks_by_collaborator[collaborator] = default_tasks
-    return tasks_by_collaborator
+    return {collaborator: default_tasks for collaborator in collaborators}
 
 
 @pytest.fixture()

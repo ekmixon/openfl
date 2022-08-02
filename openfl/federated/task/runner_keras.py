@@ -120,14 +120,11 @@ class KerasTaskRunner(TaskRunner):
             ): nparray for tensor_name, nparray in local_model_dict.items()
         }
 
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
+        global_tensor_dict = output_metric_dict | global_tensorkey_model_dict
+        local_tensor_dict = (
+            local_tensorkey_model_dict | next_local_tensorkey_model_dict
+        )
+
 
         # update the required tensors if they need to be pulled from the
         # aggregator
@@ -197,11 +194,7 @@ class KerasTaskRunner(TaskRunner):
         output_tensor_dict : {TensorKey: nparray} (these correspond to acc,
          precision, f1_score, etc.)
         """
-        if 'batch_size' in kwargs:
-            batch_size = kwargs['batch_size']
-        else:
-            batch_size = 1
-
+        batch_size = kwargs.get('batch_size', 1)
         self.rebuild_model(round_num, input_tensor_dict, validation=True)
         param_metrics = kwargs['metrics']
 
@@ -225,11 +218,7 @@ class KerasTaskRunner(TaskRunner):
                 )
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
-        else:
-            suffix += '_agg'
+        suffix = 'validate' + ('_local' if kwargs['apply'] == 'local' else '_agg')
         tags = ('metric', suffix)
         output_tensor_dict = {
             TensorKey(metric, origin, round_num, True, tags):
@@ -261,8 +250,7 @@ class KerasTaskRunner(TaskRunner):
         dict
             The weight name list
         """
-        weight_names = [weight.name for weight in obj.weights]
-        return weight_names
+        return [weight.name for weight in obj.weights]
 
     @staticmethod
     def _get_weights_dict(obj, suffix=''):
@@ -279,12 +267,12 @@ class KerasTaskRunner(TaskRunner):
         dict
             The weight dictionary.
         """
-        weights_dict = {}
         weight_names = [weight.name for weight in obj.weights]
         weight_values = obj.get_weights()
-        for name, value in zip(weight_names, weight_values):
-            weights_dict[name + suffix] = value
-        return weights_dict
+        return {
+            name + suffix: value
+            for name, value in zip(weight_names, weight_values)
+        }
 
     @staticmethod
     def _set_weights_dict(obj, weights_dict):
@@ -337,21 +325,15 @@ class KerasTaskRunner(TaskRunner):
             tensor_dict: the tensor dictionary
             with_opt_vars (bool): True = include the optimizer's status.
         """
+        # It is possible to pass in opt variables from the input tensor dict
+        # This will make sure that the correct layers are updated
+        model_weight_names = [weight.name for weight in self.model.weights]
+        model_weights_dict = {
+            name: tensor_dict[name] for name in model_weight_names
+        }
         if with_opt_vars is False:
-            # It is possible to pass in opt variables from the input tensor dict
-            # This will make sure that the correct layers are updated
-            model_weight_names = [weight.name for weight in self.model.weights]
-            model_weights_dict = {
-                name: tensor_dict[name] for name in model_weight_names
-            }
             self._set_weights_dict(self.model, model_weights_dict)
         else:
-            model_weight_names = [
-                weight.name for weight in self.model.weights
-            ]
-            model_weights_dict = {
-                name: tensor_dict[name] for name in model_weight_names
-            }
             opt_weight_names = [
                 weight.name for weight in self.model.optimizer.weights
             ]
@@ -417,11 +399,10 @@ class KerasTaskRunner(TaskRunner):
         List
             [TensorKey]
         """
-        if func_name == 'validate':
-            local_model = 'apply=' + str(kwargs['apply'])
-            return self.required_tensorkeys_for_function[func_name][local_model]
-        else:
+        if func_name != 'validate':
             return self.required_tensorkeys_for_function[func_name]
+        local_model = 'apply=' + str(kwargs['apply'])
+        return self.required_tensorkeys_for_function[func_name][local_model]
 
     def update_tensorkeys_for_functions(self):
         """

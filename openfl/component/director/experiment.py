@@ -96,14 +96,13 @@ class Experiment:
         plan.authorized_cols = list(self.collaborators)
 
         logger.info('🧿 Starting the Aggregator Service.')
-        aggregator_grpc_server = plan.interactive_api_get_server(
+        return plan.interactive_api_get_server(
             tensor_dict=self.init_tensor_dict,
             root_certificate=root_certificate,
             certificate=certificate,
             private_key=private_key,
             tls=tls,
         )
-        return aggregator_grpc_server
 
     @staticmethod
     async def _run_aggregator_grpc_server(aggregator_grpc_server: AggregatorGRPCServer) -> None:
@@ -195,9 +194,7 @@ class ExperimentsRegistry:
         On enter get experiment from pending_experiments.
         On exit put finished experiment to archive_experiments.
         """
-        while True:
-            if self.active_experiment is None and self.pending_experiments:
-                break
+        while not (self.active_experiment is None and self.pending_experiments):
             await asyncio.sleep(10)
 
         try:

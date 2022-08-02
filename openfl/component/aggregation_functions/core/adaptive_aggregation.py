@@ -39,8 +39,10 @@ class AdaptiveAggregation(AggregationFunction):
         local_tensors: List[LocalTensor]
     ) -> np.ndarray:
         """Make gradient."""
-        return sum([local_tensor.weight * (base_model_nparray - local_tensor.tensor)
-                    for local_tensor in local_tensors])
+        return sum(
+            local_tensor.weight * (base_model_nparray - local_tensor.tensor)
+            for local_tensor in local_tensors
+        )
 
     def call(
         self,

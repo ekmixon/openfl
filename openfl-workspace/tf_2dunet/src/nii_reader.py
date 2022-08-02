@@ -30,13 +30,13 @@ def parse_segments(seg, msk_modes):
         # which mask values indicicate which label mode
         mode_to_key_value = {'necrotic': 1, 'edema': 2, 'GD': 4}
         curr = seg[:, :, slice_]
-        this_msk_parts = []
-        for mode in msk_modes:
-            this_msk_parts.append(
-                ma.masked_not_equal(curr, mode_to_key_value[mode]).filled(
-                    fill_value=0
-                )
+        this_msk_parts = [
+            ma.masked_not_equal(curr, mode_to_key_value[mode]).filled(
+                fill_value=0
             )
+            for mode in msk_modes
+        ]
+
         msks_parsed.append(np.dstack(this_msk_parts))
 
     # Replace all tumorous areas with 1 (previously marked as 1, 2 or 4)
@@ -87,13 +87,15 @@ def resize_data(dataset, new_size=128, rotate=3):
     start_index = int((dataset.shape[1] - new_size) / 2)
     end_index = dataset.shape[1] - start_index
 
-    if rotate != 0:
-        resized = np.rot90(dataset[:, start_index:end_index, start_index:end_index],
-                           rotate, axes=(1, 2))
-    else:
-        resized = dataset[:, start_index:end_index, start_index:end_index]
-
-    return resized
+    return (
+        np.rot90(
+            dataset[:, start_index:end_index, start_index:end_index],
+            rotate,
+            axes=(1, 2),
+        )
+        if rotate != 0
+        else dataset[:, start_index:end_index, start_index:end_index]
+    )
 
 
 # adapted from https://github.com/NervanaSystems/topologies
@@ -126,17 +128,15 @@ def _update_channels(imgs, msks, img_channels_to_keep,
     ]
     new_msks = np.sum(msk_summands, axis=0)
 
-    if not channels_last:
-        new_order = [0, 3, 1, 2]
-        return np.transpose(new_imgs, new_order), np.transpose(new_msks, new_order)
-    else:
+    if channels_last:
         return new_imgs, new_msks
+    new_order = [0, 3, 1, 2]
+    return np.transpose(new_imgs, new_order), np.transpose(new_msks, new_order)
 
 
 def list_files(root, extension, parts):
     """Construct files from root, parts."""
-    files = [root + part + extension for part in parts]
-    return files
+    return [root + part + extension for part in parts]
 
 
 def nii_reader(brain_path, task, channels_last=True,

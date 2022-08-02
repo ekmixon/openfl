@@ -61,10 +61,6 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
             opt_weights = _get_weights_dict(optimizer, suffix)
 
             model_weights.update(opt_weights)
-            if len(opt_weights) == 0:
-                # ToDo: warn user somehow
-                pass
-
         return model_weights
 
     @staticmethod
@@ -106,12 +102,12 @@ def _get_weights_dict(obj, suffix=''):
     dict
         The weight dictionary.
     """
-    weights_dict = {}
     weight_names = [weight.name for weight in obj.weights]
     weight_values = obj.get_weights()
-    for name, value in zip(weight_names, weight_values):
-        weights_dict[name + suffix] = value
-    return weights_dict
+    return {
+        name + suffix: value
+        for name, value in zip(weight_names, weight_values)
+    }
 
 
 def _set_weights_dict(obj, weights_dict):

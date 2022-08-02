@@ -39,9 +39,7 @@ class StaticGroupedAssigner(Assigner):
 
     def define_task_assignments(self):
         """All of the logic to set up the map of tasks to collaborators is done here."""
-        cols_amount = sum([
-            len(group['collaborators']) for group in self.task_groups
-        ])
+        cols_amount = sum(len(group['collaborators']) for group in self.task_groups)
         authorized_cols_amount = len(self.authorized_cols)
 
         unique_cols = {

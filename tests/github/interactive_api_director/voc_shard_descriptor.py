@@ -44,7 +44,10 @@ class VOCDataset_SD(ShardDescriptor):
         """
         self.data_dir = data_dir
         self.split = split
-        image_sets_file = os.path.join(self.data_dir, "ImageSets", "Main", "%s.txt" % self.split)
+        image_sets_file = os.path.join(
+            self.data_dir, "ImageSets", "Main", f"{self.split}.txt"
+        )
+
         self.ids = self._read_image_ids(image_sets_file)
         self.keep_difficult = keep_difficult
 
@@ -81,12 +84,11 @@ class VOCDataset_SD(ShardDescriptor):
     def _read_image_ids(image_sets_file):
         ids = []
         with open(image_sets_file) as f:
-            for line in f:
-                ids.append(line.split(' ')[0])
+            ids.extend(line.split(' ')[0] for line in f)
         return ids
 
     def _get_annotation(self, image_id):
-        annotation_file = os.path.join(self.data_dir, "Annotations", "%s.xml" % image_id)
+        annotation_file = os.path.join(self.data_dir, "Annotations", f"{image_id}.xml")
         objects = ET.parse(annotation_file).findall("object")
         boxes = []
         labels = []
@@ -110,7 +112,7 @@ class VOCDataset_SD(ShardDescriptor):
 
     def get_img_info(self, index):
         img_id = self.ids[index]
-        annotation_file = os.path.join(self.data_dir, "Annotations", "%s.xml" % img_id)
+        annotation_file = os.path.join(self.data_dir, "Annotations", f"{img_id}.xml")
         anno = ET.parse(annotation_file).getroot()
         size = anno.find("size")
         im_info = tuple(map(int, (
@@ -118,7 +120,7 @@ class VOCDataset_SD(ShardDescriptor):
         return np.array(im_info)
 
     def _read_image(self, image_id):
-        image_file = os.path.join(self.data_dir, "JPEGImages", "%s.jpg" % image_id)
+        image_file = os.path.join(self.data_dir, "JPEGImages", f"{image_id}.jpg")
         image = Image.open(image_file).convert("RGB")
         image = np.array(image)
         return image

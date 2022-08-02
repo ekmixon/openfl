@@ -123,7 +123,8 @@ def sign_certificate(csr, issuer_private_key, issuer_name, days_to_expiration=36
     except ExtensionNotFound:
         pass  # Might not have alternative name
 
-    signed_cert = builder.sign(
-        private_key=issuer_private_key, algorithm=hashes.SHA384(), backend=default_backend()
+    return builder.sign(
+        private_key=issuer_private_key,
+        algorithm=hashes.SHA384(),
+        backend=default_backend(),
     )
-    return signed_cert

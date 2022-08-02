@@ -33,14 +33,13 @@ def named_tensor():
 @pytest.fixture
 def tensor_key(named_tensor):
     """Initialize the tensor_key mock."""
-    tensor_key = TensorKey(
+    return TensorKey(
         named_tensor.name,
         'col1',
         named_tensor.round_number,
         named_tensor.report,
-        tuple(named_tensor.tags)
+        tuple(named_tensor.tags),
     )
-    return tensor_key
 
 
 @pytest.fixture
@@ -55,9 +54,7 @@ def nparray(named_tensor):
     array_shape = tuple(metadata['int_list'])
     flat_array = np.frombuffer(named_tensor.data_bytes, dtype=np.float32)
 
-    nparray = np.reshape(flat_array, newshape=array_shape, order='C')
-
-    return nparray
+    return np.reshape(flat_array, newshape=array_shape, order='C')
 
 
 def test_cache_and_get_tensor(nparray, tensor_key):

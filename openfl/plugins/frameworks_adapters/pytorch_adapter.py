@@ -40,11 +40,10 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         Given a dict {weight name: numpy ndarray} sets weights to
         the model and optimizer objects inplace.
         """
-        new_state = {}
-        # Grabbing keys from model's state_dict helps to confirm we have
-        # everything
-        for k in model.state_dict():
-            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+        new_state = {
+            k: pt.from_numpy(tensor_dict.pop(k)).to(device)
+            for k in model.state_dict()
+        }
 
         # set model state
         model.load_state_dict(new_state)
@@ -97,9 +96,7 @@ def _get_optimizer_state(optimizer):
         params_to_sync = local_param_set & param_keys_with_state
         group['params'] = sorted(params_to_sync)
 
-    derived_opt_state_dict = _derive_opt_state_dict(opt_state_dict)
-
-    return derived_opt_state_dict
+    return _derive_opt_state_dict(opt_state_dict)
 
 
 def _derive_opt_state_dict(opt_state_dict):

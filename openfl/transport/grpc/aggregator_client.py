@@ -51,19 +51,17 @@ class RetryOnRpcErrorClientInterceptor(
         while True:
             response = continuation(client_call_details, request_or_iterator)
 
-            if isinstance(response, grpc.RpcError):
-
-                # If status code is not in retryable status codes
-                self.sleeping_policy.logger.info(f'Response code: {response.code()}')
-                if (
-                        self.status_for_retry
-                        and response.code() not in self.status_for_retry
-                ):
-                    return response
-
-                self.sleeping_policy.sleep()
-            else:
+            if not isinstance(response, grpc.RpcError):
                 return response
+            # If status code is not in retryable status codes
+            self.sleeping_policy.logger.info(f'Response code: {response.code()}')
+            if (
+                    self.status_for_retry
+                    and response.code() not in self.status_for_retry
+            ):
+                return response
+
+            self.sleeping_policy.sleep()
 
     def intercept_unary_unary(self, continuation, client_call_details, request):
         """Wrap intercept call for unary->unary RPC."""
@@ -240,16 +238,17 @@ class AggregatorGRPCClient:
         # channel.close() is idempotent. Call again here in case it wasn't issued previously
         self.disconnect()
 
-        if not self.tls:
-            self.channel = self.create_insecure_channel(self.uri)
-        else:
-            self.channel = self.create_tls_channel(
+        self.channel = (
+            self.create_tls_channel(
                 self.uri,
                 self.root_certificate,
                 self.disable_client_auth,
                 self.certificate,
-                self.private_key
+                self.private_key,
             )
+            if self.tls
+            else self.create_insecure_channel(self.uri)
+        )
 
         self.logger.debug(f'Connecting to gRPC at {self.uri}')
 

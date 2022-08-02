@@ -51,10 +51,11 @@ class FastEstimatorTaskRunner(TaskRunner):
                         'epoch_idx': self.epoch_idx,
                         'global_step': self.global_step
                     })]
-        estimator_kwargs.update({
+        estimator_kwargs |= {
             'epochs': estimator.system.total_epochs,
-            'monitor_names': estimator.monitor_names
-        })
+            'monitor_names': estimator.monitor_names,
+        }
+
         self.estimator = fe.Estimator(**estimator_kwargs)
         assert (len(estimator.network.models) == 1), (
             'Only one-model networks are currently supported')
@@ -128,14 +129,11 @@ class FastEstimatorTaskRunner(TaskRunner):
             ): nparray for tensor_name, nparray in local_model_dict.items()
         }
 
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
+        global_tensor_dict = output_metric_dict | global_tensorkey_model_dict
+        local_tensor_dict = (
+            local_tensorkey_model_dict | next_local_tensorkey_model_dict
+        )
+
 
         # update the required tensors if they need to be pulled from the
         # aggregator
@@ -176,11 +174,7 @@ class FastEstimatorTaskRunner(TaskRunner):
         }
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
-        else:
-            suffix += '_agg'
+        suffix = 'validate' + ('_local' if kwargs['apply'] == 'local' else '_agg')
         tags = ('metric', suffix)
         output_tensor_dict = {
             TensorKey(

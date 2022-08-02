@@ -55,12 +55,16 @@ def setup_plan(log_level='CRITICAL'):
 def flatten(config, return_complete=False):
     """Flatten nested config."""
     flattened_config = flatten_preserve_lists(config, '.')[0]
-    if not return_complete:
-        keys_to_remove = [
-            k for k, v in flattened_config.items()
-            if ('defaults' in k or v is None)]
-    else:
-        keys_to_remove = [k for k, v in flattened_config.items() if v is None]
+    keys_to_remove = (
+        [k for k, v in flattened_config.items() if v is None]
+        if return_complete
+        else [
+            k
+            for k, v in flattened_config.items()
+            if ('defaults' in k or v is None)
+        ]
+    )
+
     for k in keys_to_remove:
         del flattened_config[k]
 
@@ -95,8 +99,7 @@ def update_plan(override_config):
 
 def unflatten(config, separator='.'):
     """Unfold `config` settings that have `separator` in their names."""
-    keys_to_separate = [k for k in config if separator in k]
-    if len(keys_to_separate) > 0:
+    if keys_to_separate := [k for k in config if separator in k]:
         for key in keys_to_separate:
             prefix = separator.join(key.split(separator)[:-1])
             suffix = key.split(separator)[-1]
@@ -117,7 +120,7 @@ def setup_logging(level='INFO', log_file=None):
     from rich.console import Console
     from rich.logging import RichHandler
     import pkgutil
-    if True if pkgutil.find_loader('tensorflow') else False:
+    if bool(pkgutil.find_loader('tensorflow')):
         import tensorflow as tf
         tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     metric = 25
@@ -187,13 +190,10 @@ def init(workspace_template: str = 'default', log_level: str = 'INFO',
     workspace.certify()
     aggregator.generate_cert_request(agg_fqdn)
     aggregator.certify(agg_fqdn, silent=True)
-    data_path = 1
-    for col_name in col_names:
+    for data_path, col_name in enumerate(col_names, start=1):
         collaborator.generate_cert_request(
             col_name, str(data_path), silent=True, skip_package=True)
         collaborator.certify(col_name, silent=True)
-        data_path += 1
-
     setup_logging(level=log_level, log_file=log_file)
 
 

@@ -29,10 +29,7 @@ class FrameworkAdapterPlugin(FrameworkAdapterPluginInterface):
         Returns:
         dict {weight name: numpy ndarray}
         """
-        state = {}
-        if optimizer is not None:
-            state = _get_optimizer_state(optimizer)
-
+        state = _get_optimizer_state(optimizer) if optimizer is not None else {}
         model_params = model.collect_params()
 
         for param_name, param_tensor in model_params.items():
@@ -99,9 +96,11 @@ def _set_optimizer_state(optimizer, device, opt_state_dict):
     out_state = {}
     for _ in range(len(state_keys)):
         key = state_keys.pop()
-        state_vals = []
-        for i in range(max_numstates + 1):
-            state_vals.append(nd.array(opt_state_dict.pop(f'opt_state__{key}__{i}'), ctx=device))
+        state_vals = [
+            nd.array(opt_state_dict.pop(f'opt_state__{key}__{i}'), ctx=device)
+            for i in range(max_numstates + 1)
+        ]
+
         out_state[key] = tuple(state_vals)
 
     optimizer._updaters[0].set_states(dumps(out_state))

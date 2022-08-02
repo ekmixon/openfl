@@ -143,7 +143,7 @@ def export_(pip_install_options: Tuple[str]):
 
     archive_type = 'zip'
     archive_name = basename(getcwd())
-    archive_file_name = archive_name + '.' + archive_type
+    archive_file_name = f'{archive_name}.{archive_type}'
 
     # Aggregator workspace
     tmp_dir = join(mkdtemp(), 'openfl', archive_name)
@@ -206,7 +206,7 @@ def import_(archive):
             executable, '-m', 'pip', 'install', '-r', 'requirements.txt'],
             shell=False)
     else:
-        echo('No ' + requirements_filename + ' file found.')
+        echo(f'No {requirements_filename} file found.')
 
     echo(f'Workspace {archive} has been imported.')
     echo('You may need to copy your PKI certificates to join the federation.')
@@ -387,7 +387,7 @@ def dockerize_(context, base_image, save):
 
     # Exporting the workspace
     context.invoke(export_)
-    workspace_archive = workspace_name + '.zip'
+    workspace_archive = f'{workspace_name}.zip'
 
     build_args = {
         'WORKSPACE_NAME': workspace_name,
@@ -405,8 +405,7 @@ def dockerize_(context, base_image, save):
         )
     except docker.errors.BuildError as e:
         for log in e.build_log:
-            msg = log.get('stream')
-            if msg:
+            if msg := log.get('stream'):
                 echo(msg)
         echo('Failed to build the image\n' + str(e) + '\n')
         sys.exit(1)
@@ -417,7 +416,7 @@ def dockerize_(context, base_image, save):
 
     # Saving the image to a tarball
     if save:
-        workspace_image_tar = workspace_name + '_image.tar'
+        workspace_image_tar = f'{workspace_name}_image.tar'
         echo('Saving the Docker image...')
         image = client.images.get(f'{workspace_name}')
         resp = image.save(named=True)

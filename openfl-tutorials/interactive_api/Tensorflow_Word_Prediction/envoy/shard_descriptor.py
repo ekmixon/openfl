@@ -81,8 +81,7 @@ class NextWordShardDescriptor(ShardDescriptor):
     def load_data(path):
         """Load text file, return list of words."""
         file = open(path, 'r', encoding='utf8').read()
-        data = re.findall(r'[a-z]+', file.lower())
-        return data
+        return re.findall(r'[a-z]+', file.lower())
 
     @staticmethod
     def get_sequences(data):

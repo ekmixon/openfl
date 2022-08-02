@@ -109,7 +109,7 @@ class PyTorchCNN(PyTorchTaskRunner):
         # a pool operation happens after conv2 out
         # (note dependence on 'forward' function below)
         l0 = int(conv2_sqrsize_out / pool_sqrkernel_size)
-        self.fc1_insize = l0 * l0 * conv2_channels_out
+        self.fc1_insize = l0**2 * conv2_channels_out
         self.fc1 = nn.Linear(self.fc1_insize, fc2_insize)
         self.fc2 = nn.Linear(fc2_insize, self.num_classes)
         if print_model:
@@ -170,11 +170,7 @@ class PyTorchCNN(PyTorchTaskRunner):
                 val_score += pred.eq(target).sum().cpu().numpy()
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
-        else:
-            suffix += '_agg'
+        suffix = 'validate' + ('_local' if kwargs['apply'] == 'local' else '_agg')
         tags = ('metric', suffix)
         # TODO figure out a better way to pass
         #  in metric for this pytorch validate function

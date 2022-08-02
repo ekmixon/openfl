@@ -53,7 +53,7 @@ class ExperimentWorkspace:
                 else:
                     break
         else:
-            logger.error('No ' + requirements_filename + ' file found.')
+            logger.error(f'No {requirements_filename} file found.')
 
     def __enter__(self):
         """Create a collaborator workspace for the experiment."""
@@ -90,13 +90,7 @@ def dump_requirements_file(
     path = Path(path).absolute()
 
     # Prepare user provided prefixes for merge with original ones
-    if prefixes is None:
-        prefixes = set()
-    elif type(prefixes) is str:
-        prefixes = set(prefixes,)
-    else:
-        prefixes = set(prefixes)
-
+    prefixes = set() if prefixes is None else set(prefixes,)
     # Merge prefixes:
     # We expect that all the prefixes in a requirement file
     # are placed at the top

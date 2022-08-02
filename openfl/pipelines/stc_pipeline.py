@@ -58,8 +58,7 @@ class SparsityTransformer(Transformer):
         """
         data = data.astype(np.float32)
         data_shape = metadata['int_list']
-        recovered_data = data.reshape(data_shape)
-        return recovered_data
+        return data.reshape(data_shape)
 
     @staticmethod
     def _topk_func(x, k):
@@ -81,7 +80,7 @@ class SparsityTransformer(Transformer):
         # get the top k magnitude
         topk_mag = np.asarray(x[idx[start_idx:]])
         indices = np.asarray(idx[start_idx:])
-        if min(topk_mag) - 0 < 10e-8:  # avoid zeros
+        if min(topk_mag) < 1e-07:  # avoid zeros
             topk_mag = topk_mag + 10e-8
         return topk_mag, indices
 
@@ -149,8 +148,8 @@ class TernaryTransformer(Transformer):
         float_to_int_map = {}
         # create table
         for idx, u_value in enumerate(unique_value_array):
-            int_to_float_map.update({idx: u_value})
-            float_to_int_map.update({u_value: idx})
+            int_to_float_map[idx] = u_value
+            float_to_int_map[u_value] = idx
             # assign to the integer array
             indices = np.where(flatten_array == u_value)
             int_array[indices] = idx

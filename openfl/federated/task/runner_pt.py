@@ -36,11 +36,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         """
         super().__init__()
         TaskRunner.__init__(self, **kwargs)
-        if device:
-            self.device = device
-        else:
-            self.device = pt.device('cuda' if pt.cuda.is_available() else 'cpu')
-
+        self.device = device or pt.device('cuda' if pt.cuda.is_available() else 'cpu')
         # This is a map of all the required tensors for each of the public
         # functions in PyTorchTaskRunner
         self.required_tensorkeys_for_function = {}
@@ -112,11 +108,7 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
                 val_score += pred.eq(target_categorical).sum().cpu().numpy()
 
         origin = col_name
-        suffix = 'validate'
-        if kwargs['apply'] == 'local':
-            suffix += '_local'
-        else:
-            suffix += '_agg'
+        suffix = 'validate' + ('_local' if kwargs['apply'] == 'local' else '_agg')
         tags = ('metric', suffix)
         # TODO figure out a better way to pass in metric for this pytorch
         #  validate function
@@ -188,14 +180,11 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
             TensorKey(tensor_name, origin, round_num + 1, False, ('model',)): nparray
             for tensor_name, nparray in local_model_dict.items()}
 
-        global_tensor_dict = {
-            **output_metric_dict,
-            **global_tensorkey_model_dict
-        }
-        local_tensor_dict = {
-            **local_tensorkey_model_dict,
-            **next_local_tensorkey_model_dict
-        }
+        global_tensor_dict = output_metric_dict | global_tensorkey_model_dict
+        local_tensor_dict = (
+            local_tensorkey_model_dict | next_local_tensorkey_model_dict
+        )
+
 
         # Update the required tensors if they need to be pulled from the
         # aggregator
@@ -275,11 +264,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         # get device for correct placement of tensors
         device = self.device
 
-        new_state = {}
-        # Grabbing keys from model's state_dict helps to confirm we have
-        # everything
-        for k in self.state_dict():
-            new_state[k] = pt.from_numpy(tensor_dict.pop(k)).to(device)
+        new_state = {
+            k: pt.from_numpy(tensor_dict.pop(k)).to(device)
+            for k in self.state_dict()
+        }
 
         # set model state
         self.load_state_dict(new_state)
@@ -308,11 +296,10 @@ class PyTorchTaskRunner(nn.Module, TaskRunner):
         Returns:
             list : [TensorKey]
         """
-        if func_name == 'validate':
-            local_model = 'apply=' + str(kwargs['apply'])
-            return self.required_tensorkeys_for_function[func_name][local_model]
-        else:
+        if func_name != 'validate':
             return self.required_tensorkeys_for_function[func_name]
+        local_model = 'apply=' + str(kwargs['apply'])
+        return self.required_tensorkeys_for_function[func_name][local_model]
 
     def initialize_tensorkeys_for_functions(self, with_opt_vars=False):
         """Set the required tensors for all publicly accessible task methods.
@@ -621,9 +608,7 @@ def _get_optimizer_state(optimizer):
         params_to_sync = local_param_set & param_keys_with_state
         group['params'] = sorted(params_to_sync)
 
-    derived_opt_state_dict = _derive_opt_state_dict(opt_state_dict)
-
-    return derived_opt_state_dict
+    return _derive_opt_state_dict(opt_state_dict)
 
 
 def _set_optimizer_state(optimizer, device, derived_opt_state_dict):

@@ -71,5 +71,4 @@ class Assigner:
 
     def get_aggregation_type_for_task(self, task_name):
         """Extract aggregation type from self.tasks."""
-        agg_fn = self.agg_functions_by_task_name.get(task_name, WeightedAverage())
-        return agg_fn
+        return self.agg_functions_by_task_name.get(task_name, WeightedAverage())

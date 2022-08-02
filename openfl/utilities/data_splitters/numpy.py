@@ -52,8 +52,7 @@ class EqualNumPyDataSplitter(NumPyDataSplitter):
         idx = range(len(data))
         if self.shuffle:
             idx = np.random.permutation(idx)
-        slices = np.array_split(idx, num_collaborators)
-        return slices
+        return np.array_split(idx, num_collaborators)
 
 
 class RandomNumPyDataSplitter(NumPyDataSplitter):
@@ -143,7 +142,7 @@ class LogNormalNumPyDataSplitter(NumPyDataSplitter):
                 slice_end = slice_start + self.min_samples_per_class
                 print(f'Assigning {slice_start}:{slice_end} of class {label} to {col} col...')
                 idx[col] += list(label_idx[slice_start:slice_end])
-        if any([len(i) != samples_per_col for i in idx]):
+        if any(len(i) != samples_per_col for i in idx):
             raise SystemError(f'''All collaborators should have {samples_per_col} elements
 but distribution is {[len(i) for i in idx]}''')
 
@@ -220,5 +219,5 @@ class DirichletNumPyDataSplitter(NumPyDataSplitter):
                 proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
                 idx_splitted = np.split(idx_k, proportions)
                 idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, idx_splitted)]
-                min_size = min([len(idx_j) for idx_j in idx_batch])
+                min_size = min(len(idx_j) for idx_j in idx_batch)
         return idx_batch

@@ -125,7 +125,7 @@ class KvasirSD(DataInterface):
 
 fed_dataset = KvasirSD(train_bs=4, valid_bs=8)
 fed_dataset.shard_descriptor = dummy_shard_desc
-for i, (sample, target) in enumerate(fed_dataset.get_train_loader()):
+for sample, target in fed_dataset.get_train_loader():
     print(sample.shape)
 
 model_unet = UNet()

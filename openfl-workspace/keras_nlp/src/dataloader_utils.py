@@ -24,7 +24,7 @@ def download_data_():
     """
     pkg = 'fra-eng.zip'   # Language file: change this to change the language
     data_dir = 'data'
-    url = 'http://www.manythings.org/anki/' + pkg
+    url = f'http://www.manythings.org/anki/{pkg}'
     filename = pkg.split('-')[0] + '.txt'
 
     workspace_dir = getcwd()
@@ -94,8 +94,8 @@ def import_raw_data_(data_path='', num_samples=0):
     target_characters = sorted(target_characters)
     num_encoder_tokens = len(input_characters)
     num_decoder_tokens = len(target_characters)
-    max_encoder_seq_length = max([len(txt) for txt in input_texts])
-    max_decoder_seq_length = max([len(txt) for txt in target_texts])
+    max_encoder_seq_length = max(len(txt) for txt in input_texts)
+    max_decoder_seq_length = max(len(txt) for txt in target_texts)
 
     details = {'num_samples': len(input_texts),
                'num_encoder_tokens': num_encoder_tokens,

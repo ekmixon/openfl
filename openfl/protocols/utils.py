@@ -53,11 +53,7 @@ def bytes_and_metadata_to_model_proto(bytes_dict, model_id, model_version,
             else:
                 int_to_float = {}
 
-            if metadata.get('int_list') is not None:
-                int_list = metadata.get('int_list')
-            else:
-                int_list = []
-
+            int_list = [] if metadata.get('int_list') is None else metadata.get('int_list')
             if metadata.get('bool_list') is not None:
                 bool_list = metadata.get('bool_list')
             else:
@@ -82,11 +78,7 @@ def construct_named_tensor(tensor_key, nparray, transformer_metadata, lossless):
         else:
             int_to_float = {}
 
-        if metadata.get('int_list') is not None:
-            int_list = metadata.get('int_list')
-        else:
-            int_list = []
-
+        int_list = [] if metadata.get('int_list') is None else metadata.get('int_list')
         if metadata.get('bool_list') is not None:
             bool_list = metadata.get('bool_list')
         else:
@@ -119,13 +111,13 @@ def construct_proto(tensor_dict, model_id, model_version, is_delta, compression_
     for key, array in tensor_dict.items():
         bytes_dict[key], metadata_dict[key] = compression_pipeline.forward(data=array)
 
-    # convert the compressed_tensor_dict and metadata to protobuf, and make the new model proto
-    model_proto = bytes_and_metadata_to_model_proto(bytes_dict=bytes_dict,
-                                                    model_id=model_id,
-                                                    model_version=model_version,
-                                                    is_delta=is_delta,
-                                                    metadata_dict=metadata_dict)
-    return model_proto
+    return bytes_and_metadata_to_model_proto(
+        bytes_dict=bytes_dict,
+        model_id=model_id,
+        model_version=model_version,
+        is_delta=is_delta,
+        metadata_dict=metadata_dict,
+    )
 
 
 def construct_model_proto(tensor_dict, round_number, tensor_pipe):
@@ -154,10 +146,13 @@ def deconstruct_model_proto(model_proto, compression_pipeline):
     # decompress the tensors
     # TODO: Handle tensors meant to be held-out from the compression pipeline
     #  (currently none are held out).
-    tensor_dict = {}
-    for key in bytes_dict:
-        tensor_dict[key] = compression_pipeline.backward(data=bytes_dict[key],
-                                                         transformer_metadata=metadata_dict[key])
+    tensor_dict = {
+        key: compression_pipeline.backward(
+            data=bytes_dict[key], transformer_metadata=metadata_dict[key]
+        )
+        for key in bytes_dict
+    }
+
     return tensor_dict, round_number
 
 
@@ -174,14 +169,12 @@ def deconstruct_proto(model_proto, compression_pipeline):
     # extract the tensor_dict and metadata
     bytes_dict, metadata_dict = model_proto_to_bytes_and_metadata(model_proto)
 
-    # decompress the tensors
-    # TODO: Handle tensors meant to be held-out from the compression pipeline
-    #  (currently none are held out).
-    tensor_dict = {}
-    for key in bytes_dict:
-        tensor_dict[key] = compression_pipeline.backward(data=bytes_dict[key],
-                                                         transformer_metadata=metadata_dict[key])
-    return tensor_dict
+    return {
+        key: compression_pipeline.backward(
+            data=bytes_dict[key], transformer_metadata=metadata_dict[key]
+        )
+        for key in bytes_dict
+    }
 
 
 def load_proto(fpath):
@@ -195,8 +188,7 @@ def load_proto(fpath):
     """
     with open(fpath, 'rb') as f:
         loaded = f.read()
-        model = base_pb2.ModelProto().FromString(loaded)
-        return model
+        return base_pb2.ModelProto().FromString(loaded)
 
 
 def dump_proto(model_proto, fpath):
@@ -227,13 +219,12 @@ def datastream_to_proto(proto, stream, logger=None):
     for chunk in stream:
         npbytes += chunk.npbytes
 
-    if len(npbytes) > 0:
-        proto.ParseFromString(npbytes)
-        if logger is not None:
-            logger.debug(f'datastream_to_proto parsed a {type(proto)}.')
-        return proto
-    else:
+    if len(npbytes) <= 0:
         raise RuntimeError(f'Received empty stream message of type {type(proto)}')
+    proto.ParseFromString(npbytes)
+    if logger is not None:
+        logger.debug(f'datastream_to_proto parsed a {type(proto)}.')
+    return proto
 
 
 def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
@@ -248,13 +239,12 @@ def proto_to_datastream(proto, logger, max_buffer_size=(2 * 1024 * 1024)):
     """
     npbytes = proto.SerializeToString()
     data_size = len(npbytes)
-    buffer_size = data_size if max_buffer_size > data_size else max_buffer_size
+    buffer_size = min(max_buffer_size, data_size)
     logger.debug(f'Setting stream chunks with size {buffer_size} for proto of type {type(proto)}')
 
     for i in range(0, data_size, buffer_size):
         chunk = npbytes[i: i + buffer_size]
-        reply = base_pb2.DataStream(npbytes=chunk, size=len(chunk))
-        yield reply
+        yield base_pb2.DataStream(npbytes=chunk, size=len(chunk))
 
 
 def get_headers(context) -> dict:

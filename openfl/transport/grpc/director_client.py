@@ -81,11 +81,10 @@ class ShardDirectorClient:
         response_iter = self.stub.WaitExperiment(self._get_experiment_data())
         logger.info('WaitExperiment response has received')
         response = next(response_iter)
-        experiment_name = response.experiment_name
-        if not experiment_name:
+        if experiment_name := response.experiment_name:
+            return experiment_name
+        else:
             raise Exception('No experiment')
-
-        return experiment_name
 
     def get_experiment_data(self, experiment_name):
         """Get an experiment data from the director."""
@@ -94,9 +93,7 @@ class ShardDirectorClient:
             experiment_name=experiment_name,
             collaborator_name=self.shard_name
         )
-        data_stream = self.stub.GetExperimentData(request)
-
-        return data_stream
+        return self.stub.GetExperimentData(request)
 
     def set_experiment_failed(
             self,
@@ -209,8 +206,7 @@ class DirectorClient:
                 col_names=col_names,
                 model_proto=model_proto,
             )
-            resp = self.stub.SetNewExperiment(experiment_info_gen)
-            return resp
+            return self.stub.SetNewExperiment(experiment_info_gen)
 
     def _get_experiment_info(self, arch_path, name, col_names, model_proto):
         with open(arch_path, 'rb') as arch:
@@ -282,19 +278,20 @@ class DirectorClient:
         if raw_result:
             return envoys
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        result = {}
-        for envoy in envoys.envoy_infos:
-            result[envoy.shard_info.node_info.name] = {
+        return {
+            envoy.shard_info.node_info.name: {
                 'shard_info': envoy.shard_info,
                 'is_online': envoy.is_online or False,
                 'is_experiment_running': envoy.is_experiment_running or False,
                 'last_updated': datetime.fromtimestamp(
-                    envoy.last_updated.seconds).strftime('%Y-%m-%d %H:%M:%S'),
+                    envoy.last_updated.seconds
+                ).strftime('%Y-%m-%d %H:%M:%S'),
                 'current_time': now,
                 'valid_duration': envoy.valid_duration,
                 'experiment_name': 'ExperimentName Mock',
             }
-        return result
+            for envoy in envoys.envoy_infos
+        }
 
     def get_experiments_list(self):
         """Get experiments list."""

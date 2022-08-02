@@ -21,7 +21,7 @@ def director_client(director_pb2_grpc):
     shard_name = 'test shard'
     tls = False
     root_certificate, private_key, certificate = None, None, None
-    director_client = ShardDirectorClient(
+    return ShardDirectorClient(
         director_host=director_host,
         director_port=director_port,
         shard_name=shard_name,
@@ -30,7 +30,6 @@ def director_client(director_pb2_grpc):
         private_key=private_key,
         certificate=certificate,
     )
-    return director_client
 
 
 def test_report_shard_info(director_client):

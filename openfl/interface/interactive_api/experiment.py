@@ -289,16 +289,16 @@ class FLExperiment:
         archive_type = 'zip'
         archive_name = basename(getcwd())
 
-        tmp_dir = 'temp_' + archive_name
+        tmp_dir = f'temp_{archive_name}'
         makedirs(tmp_dir, exist_ok=True)
 
         ignore = ignore_patterns(
             '__pycache__', 'data', 'cert', tmp_dir, '*.crt', '*.key',
             '*.csr', '*.srl', '*.pem', '*.pbuf', '*zip')
 
-        copytree('./', tmp_dir + '/workspace', ignore=ignore)
+        copytree('./', f'{tmp_dir}/workspace', ignore=ignore)
 
-        arch_path = make_archive(archive_name, archive_type, tmp_dir + '/workspace')
+        arch_path = make_archive(archive_name, archive_type, f'{tmp_dir}/workspace')
 
         rmtree(tmp_dir)
 
